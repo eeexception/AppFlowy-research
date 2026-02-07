@@ -38,7 +38,7 @@ class AuthService {
     }
 
     final response = await _client.post(
-      '/api/user/sign_in',
+      '/gotrue/token?grant_type=password',
       data: {
         'email': email,
         'password': password,
@@ -65,7 +65,10 @@ class AuthService {
 
   /// Sign in as guest
   Future<UserProfile> signInAsGuest() async {
-    final response = await _client.post('/api/user/guest', data: {});
+    final response = await _client.post('/gotrue/signup', data: {
+      'email': 'guest_${DateTime.now().millisecondsSinceEpoch}@appflowy.io',
+      'password': 'guest_password_${DateTime.now().millisecondsSinceEpoch}',
+    });
 
     // Parse response
     final authResponse = AuthResponse.fromJson(response);
@@ -91,7 +94,7 @@ class AuthService {
       throw AuthenticationException('Not authenticated');
     }
 
-    final response = await _client.get('/api/user/profile');
+    final response = await _client.get('/gotrue/user');
 
     final user = UserProfile.fromJson(response);
     _currentUser = user;

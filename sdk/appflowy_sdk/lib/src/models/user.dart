@@ -9,9 +9,9 @@ class UserProfile with _$UserProfile {
   const factory UserProfile({
     required String id,
     required String email,
-    required String name,
+    String? name,
     @JsonKey(name: 'avatar_url') String? avatarUrl,
-    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
   }) = _UserProfile;
 
   factory UserProfile.fromJson(Map<String, dynamic> json) =>
