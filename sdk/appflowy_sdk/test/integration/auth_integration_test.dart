@@ -151,7 +151,7 @@ void main() {
       for (final ws in workspaces) {
         print('   - ${ws.name} (${ws.id})');
       }
-    }, skip: 'Requires AppFlowy Cloud user initialization beyond GoTrue auth');
+    });
 
     test('should create a new workspace', () async {
       final workspace = await sdk.createWorkspace(name: 'Test Workspace');
@@ -161,6 +161,6 @@ void main() {
 
       print('✅ Created workspace: ${workspace.name}');
       print('   ID: ${workspace.id}');
-    }, skip: 'Requires AppFlowy Cloud user initialization beyond GoTrue auth');
+    });
   });
 }

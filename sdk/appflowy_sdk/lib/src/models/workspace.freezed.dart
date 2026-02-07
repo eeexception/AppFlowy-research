@@ -20,7 +20,9 @@ Workspace _$WorkspaceFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Workspace {
+  @JsonKey(name: 'workspace_id')
   String get id => throw _privateConstructorUsedError;
+  @JsonKey(name: 'workspace_name')
   String get name => throw _privateConstructorUsedError;
   @JsonKey(name: 'created_at')
   DateTime get createdAt => throw _privateConstructorUsedError;
@@ -42,8 +44,8 @@ abstract class $WorkspaceCopyWith<$Res> {
       _$WorkspaceCopyWithImpl<$Res, Workspace>;
   @useResult
   $Res call(
-      {String id,
-      String name,
+      {@JsonKey(name: 'workspace_id') String id,
+      @JsonKey(name: 'workspace_name') String name,
       @JsonKey(name: 'created_at') DateTime createdAt,
       List<WorkspaceMember> members});
 }
@@ -98,8 +100,8 @@ abstract class _$$WorkspaceImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String id,
-      String name,
+      {@JsonKey(name: 'workspace_id') String id,
+      @JsonKey(name: 'workspace_name') String name,
       @JsonKey(name: 'created_at') DateTime createdAt,
       List<WorkspaceMember> members});
 }
@@ -147,8 +149,8 @@ class __$$WorkspaceImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$WorkspaceImpl implements _Workspace {
   const _$WorkspaceImpl(
-      {required this.id,
-      required this.name,
+      {@JsonKey(name: 'workspace_id') required this.id,
+      @JsonKey(name: 'workspace_name') required this.name,
       @JsonKey(name: 'created_at') required this.createdAt,
       final List<WorkspaceMember> members = const []})
       : _members = members;
@@ -157,8 +159,10 @@ class _$WorkspaceImpl implements _Workspace {
       _$$WorkspaceImplFromJson(json);
 
   @override
+  @JsonKey(name: 'workspace_id')
   final String id;
   @override
+  @JsonKey(name: 'workspace_name')
   final String name;
   @override
   @JsonKey(name: 'created_at')
@@ -212,8 +216,8 @@ class _$WorkspaceImpl implements _Workspace {
 
 abstract class _Workspace implements Workspace {
   const factory _Workspace(
-      {required final String id,
-      required final String name,
+      {@JsonKey(name: 'workspace_id') required final String id,
+      @JsonKey(name: 'workspace_name') required final String name,
       @JsonKey(name: 'created_at') required final DateTime createdAt,
       final List<WorkspaceMember> members}) = _$WorkspaceImpl;
 
@@ -221,8 +225,10 @@ abstract class _Workspace implements Workspace {
       _$WorkspaceImpl.fromJson;
 
   @override
+  @JsonKey(name: 'workspace_id')
   String get id;
   @override
+  @JsonKey(name: 'workspace_name')
   String get name;
   @override
   @JsonKey(name: 'created_at')

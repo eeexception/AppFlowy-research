@@ -8,8 +8,8 @@ part of 'workspace.dart';
 
 _$WorkspaceImpl _$$WorkspaceImplFromJson(Map<String, dynamic> json) =>
     _$WorkspaceImpl(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: json['workspace_id'] as String,
+      name: json['workspace_name'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       members: (json['members'] as List<dynamic>?)
               ?.map((e) => WorkspaceMember.fromJson(e as Map<String, dynamic>))
@@ -19,8 +19,8 @@ _$WorkspaceImpl _$$WorkspaceImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$WorkspaceImplToJson(_$WorkspaceImpl instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
+      'workspace_id': instance.id,
+      'workspace_name': instance.name,
       'created_at': instance.createdAt.toIso8601String(),
       'members': instance.members,
     };

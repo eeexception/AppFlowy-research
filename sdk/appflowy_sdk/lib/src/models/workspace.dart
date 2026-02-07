@@ -17,8 +17,8 @@ enum Role {
 @freezed
 class Workspace with _$Workspace {
   const factory Workspace({
-    required String id,
-    required String name,
+    @JsonKey(name: 'workspace_id') required String id,
+    @JsonKey(name: 'workspace_name') required String name,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @Default([]) List<WorkspaceMember> members,
   }) = _Workspace;

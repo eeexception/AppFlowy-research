@@ -57,6 +57,9 @@ class AuthService {
     // Set auth token in client
     _client.setAuthToken(authResponse.accessToken);
 
+    // Initialize user in AppFlowy Cloud (creates user profile + default workspace)
+    await _initializeUser(authResponse.accessToken);
+
     // Store user
     _currentUser = authResponse.user;
 
@@ -82,10 +85,24 @@ class AuthService {
     // Set auth token in client
     _client.setAuthToken(authResponse.accessToken);
 
+    // Initialize user in AppFlowy Cloud (creates user profile + default workspace)
+    await _initializeUser(authResponse.accessToken);
+
     // Store user
     _currentUser = authResponse.user;
 
     return authResponse.user;
+  }
+
+  /// Initialize user in AppFlowy Cloud database
+  /// This creates the user profile and default workspace
+  Future<void> _initializeUser(String accessToken) async {
+    try {
+      await _client.get('/api/user/verify/$accessToken');
+    } catch (e) {
+      // Initialization might fail if user already exists, which is fine
+      // We'll continue anyway
+    }
   }
 
   /// Get current user profile

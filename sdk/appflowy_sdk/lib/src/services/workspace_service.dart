@@ -12,7 +12,11 @@ class WorkspaceService {
   Future<List<Workspace>> getWorkspaces() async {
     final response = await _client.get('/api/workspace');
 
-    final workspaces = (response['workspaces'] as List)
+    // Real API wraps response in 'data' field
+    final data = response['data'] ?? response;
+    final workspacesList = data is List ? data : (data['workspaces'] ?? data);
+
+    final workspaces = (workspacesList as List)
         .map((json) => Workspace.fromJson(json as Map<String, dynamic>))
         .toList();
 
@@ -29,10 +33,12 @@ class WorkspaceService {
   Future<Workspace> createWorkspace({required String name}) async {
     final response = await _client.post(
       '/api/workspace',
-      data: {'name': name},
+      data: {'workspace_name': name},
     );
 
-    return Workspace.fromJson(response);
+    // Real API wraps response in 'data' field
+    final data = response['data'] ?? response;
+    return Workspace.fromJson(data);
   }
 
   /// Update workspace
