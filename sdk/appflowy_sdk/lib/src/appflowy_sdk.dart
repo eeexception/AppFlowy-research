@@ -12,8 +12,7 @@ class AppFlowySDK {
 
   late final AuthService auth;
   late final WorkspaceService _workspaceService;
-  // ignore: unused_field
-  late final DatabaseService _databaseService;
+  late final DatabaseService database;
 
   AppFlowySDK({
     required this.config,
@@ -29,7 +28,7 @@ class AppFlowySDK {
     );
 
     _workspaceService = WorkspaceService(client: _client);
-    _databaseService = DatabaseService(client: _client);
+    database = DatabaseService(client: _client);
 
     // Restore session if token storage is available
     if (tokenStorage != null || config.tokenStorage != null) {

@@ -3,6 +3,9 @@
 /// This library provides a high-level, typed interface to the AppFlowy Cloud API.
 library appflowy_sdk;
 
+// Version
+export 'src/version.dart';
+
 // Core
 export 'src/core/config.dart';
 export 'src/core/exceptions.dart';

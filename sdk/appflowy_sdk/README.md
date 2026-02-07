@@ -7,8 +7,11 @@ Official Dart/Flutter SDK for AppFlowy Cloud - Build applications using AppFlowy
 ✅ **Type-Safe** - Strongly typed models with full IDE support
 ✅ **High-Level API** - Work with Workspaces, Databases, and Rows directly
 ✅ **Authentication** - Email/password, guest mode, automatic token refresh
+✅ **Database Operations** - Full CRUD on databases, fields, and rows
+✅ **Incremental Sync** - Fetch only rows updated after a specific timestamp
 ✅ **Error Handling** - Comprehensive exception hierarchy
 ✅ **REST API** - Simple HTTP-based communication (no WebSocket complexity)
+✅ **Versioning** - Semantic versioning with compatibility guarantees
 
 ## Installation
 
@@ -54,14 +57,27 @@ void main() async {
 
 The SDK includes comprehensive examples showing real-world usage:
 
+- **[Working Todo App](example/working_todo_app.dart)** - **COMPLETE working example** showing AppFlowy as a backend
 - **[Basic Examples](example/main.dart)** - Authentication, workspaces, error handling
 - **[Flutter App](example/flutter_app_example.dart)** - Complete Flutter app with UI
-- **[More Examples](example/README.md)** - Database operations, configuration options
+- **[Configuration](example/configuration_examples.dart)** - Different deployment configurations
+- **[More Examples](EXAMPLES.md)** - Comprehensive integration guide
 
-Run an example:
+Run the working todo app:
 ```bash
-dart example/main.dart
+# Start AppFlowy Cloud
+docker-compose up -d
+
+# Run the example
+dart example/working_todo_app.dart
 ```
+
+This demonstrates:
+- ✅ Authentication & session management
+- ✅ Database CRUD operations (create, read, update)
+- ✅ Incremental sync (get changes since timestamp)
+- ✅ Schema management (add custom fields)
+- ✅ Idempotent operations (upsert)
 
 ## Configuration Options
 
@@ -120,6 +136,61 @@ final workspace = await sdk.createWorkspace(name: 'My Workspace');
 final workspace = await sdk.getWorkspace(workspaceId);
 ```
 
+### Database Operations
+
+```dart
+// List databases
+final databases = await sdk.database.listDatabases(workspaceId: workspaceId);
+
+// Get database fields (schema)
+final fields = await sdk.database.getFields(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+);
+
+// Create a new row
+final rowId = await sdk.database.createRow(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+  cellData: {
+    'Name': 'John Doe',
+    'Email': 'john@example.com',
+    'Status': 'Active',
+  },
+);
+
+// Get all rows
+final rows = await sdk.database.getRows(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+);
+
+// Get rows updated after a timestamp (incremental sync)
+final updatedRows = await sdk.database.getUpdatedRows(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+  after: DateTime.now().subtract(Duration(hours: 1)),
+);
+
+// Upsert with idempotency
+final rowId = await sdk.database.upsertRow(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+  preHash: 'unique-identifier',
+  cellData: {'Name': 'Updated Name'},
+);
+
+// Add a custom field
+final fieldId = await sdk.database.addField(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+  field: InsertDatabaseField(
+    name: 'Priority',
+    fieldType: FieldTypes.singleSelect,
+  ),
+);
+```
+
 ### Error Handling
 
 ```dart
@@ -150,6 +221,24 @@ flutter test
 Generate code:
 ```bash
 flutter pub run build_runner build
+```
+
+## Versioning & Compatibility
+
+The SDK follows [Semantic Versioning](https://semver.org/):
+
+- **Current Version:** `1.0.0-alpha`
+- **Supported AppFlowy Cloud:** `≥ 0.5.x`
+- **Stability:** Alpha (breaking changes possible)
+
+See [VERSION_COMPAT.md](VERSION_COMPAT.md) for detailed compatibility information and [CHANGELOG.md](CHANGELOG.md) for version history.
+
+```dart
+import 'package:appflowy_sdk/appflowy_sdk.dart';
+
+// Check SDK version
+print(SDKVersion.version); // "1.0.0-alpha"
+print(SDKVersion.userAgent); // "AppFlowySDK/1.0.0-alpha"
 ```
 
 ## License

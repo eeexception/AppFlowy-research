@@ -123,7 +123,27 @@ flutter run example/flutter_app_example.dart
 └─────────────────────────┘
 ```
 
-### 3. Configuration [`example/configuration_examples.dart`](example/configuration_examples.dart)
+### 3. Todo App - Real Workflow [`example/todo_app_example.dart`](example/todo_app_example.dart)
+
+**What it shows:**
+- ✅ Complete mobile app workflow
+- ✅ Database CRUD operations
+- ✅ Creating and managing todos
+- ✅ Real-world Flutter widget example
+- ✅ State management patterns
+
+**Run it:**
+```bash
+dart example/todo_app_example.dart
+```
+
+**Key features:**
+- Creating rows (adding todos)
+- Reading rows (listing todos)
+- Updating rows (marking complete)
+- Deleting rows (removing todos)
+
+### 4. Configuration [`example/configuration_examples.dart`](example/configuration_examples.dart)
 
 **What it shows:**
 - ✅ AppFlowy Cloud (hosted)
@@ -217,6 +237,123 @@ print('Created: ${workspace.name}');
 ```dart
 final workspace = await sdk.getWorkspace(workspaceId);
 print('Workspace: ${workspace.name}');
+```
+
+### Database Operations
+
+#### Get Database
+```dart
+final database = await sdk.database.getDatabase(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+);
+print('Database: ${database.name}');
+print('Fields: ${database.fields.length}');
+```
+
+#### Create Row (Add Data)
+```dart
+final row = await sdk.database.createRow(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+  cellData: {
+    'title': 'Buy groceries',
+    'status': 'todo',
+    'priority': 'high',
+    'due_date': DateTime.now().add(Duration(days: 1)).toIso8601String(),
+  },
+);
+print('Created row: ${row.id}');
+```
+
+#### List Rows (Read Data)
+```dart
+final rows = await sdk.database.getRows(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+  limit: 50, // optional pagination
+);
+
+for (final row in rows) {
+  final title = row.cells['title'];
+  final status = row.cells['status'];
+  print('- $title ($status)');
+}
+```
+
+#### Update Row
+```dart
+await sdk.database.updateRow(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+  rowId: rowId,
+  cellData: {
+    'status': 'completed',
+    'completed_at': DateTime.now().toIso8601String(),
+  },
+);
+```
+
+#### Delete Row
+```dart
+await sdk.database.deleteRow(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+  rowId: rowId,
+);
+```
+
+#### Batch Create Rows
+```dart
+final rows = await sdk.database.batchCreateRows(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+  rowsData: [
+    {'title': 'Task 1', 'status': 'todo'},
+    {'title': 'Task 2', 'status': 'todo'},
+    {'title': 'Task 3', 'status': 'todo'},
+  ],
+);
+print('Created ${rows.length} rows');
+```
+
+#### Manage Fields (Columns)
+```dart
+// Get all fields
+final fields = await sdk.database.getFields(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+);
+
+// Create a new field
+final field = await sdk.database.createField(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+  name: 'Priority',
+  type: FieldType.singleSelect,
+  typeOptions: {
+    'options': [
+      {'name': 'High', 'color': 'red'},
+      {'name': 'Medium', 'color': 'yellow'},
+      {'name': 'Low', 'color': 'green'},
+    ],
+  },
+);
+
+// Update field
+await sdk.database.updateField(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+  fieldId: fieldId,
+  name: 'Updated Name',
+);
+
+// Delete field
+await sdk.database.deleteField(
+  workspaceId: workspaceId,
+  databaseId: databaseId,
+  fieldId: fieldId,
+);
 ```
 
 ### Error Handling

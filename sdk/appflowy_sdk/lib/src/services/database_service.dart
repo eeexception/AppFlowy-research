@@ -1,25 +1,34 @@
 import '../core/client.dart';
 import '../models/database.dart';
 
-/// Database service
+/// Database service for AppFlowy Cloud
+///
+/// Provides CRUD operations on databases, fields, and rows
 class DatabaseService {
   final AppFlowyClient _client;
 
   DatabaseService({required AppFlowyClient client}) : _client = client;
 
-  /// Get database by ID
-  Future<Database> getDatabase({
+  /// List all databases in a workspace
+  ///
+  /// GET /api/workspace/{workspace_id}/database
+  Future<List<Database>> listDatabases({
     required String workspaceId,
-    required String databaseId,
   }) async {
-    final response = await _client.get(
-      '/api/workspace/$workspaceId/database/$databaseId',
-    );
+    final response = await _client.get('/api/workspace/$workspaceId/database');
 
-    return Database.fromJson(response);
+    // Response is either array or wrapped in data
+    final data = response is List ? response : (response['data'] ?? response);
+    final list = data is List ? data : [];
+
+    return list
+        .map((json) => Database.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
-  /// Get all fields in a database
+  /// Get database fields (columns)
+  ///
+  /// GET /api/workspace/{workspace_id}/database/{database_id}/fields
   Future<List<Field>> getFields({
     required String workspaceId,
     required String databaseId,
@@ -28,166 +37,180 @@ class DatabaseService {
       '/api/workspace/$workspaceId/database/$databaseId/fields',
     );
 
-    final fields = (response['fields'] as List)
+    final data = response is List ? response : (response['data'] ?? response);
+    final list = data is List ? data : [];
+
+    return list
         .map((json) => Field.fromJson(json as Map<String, dynamic>))
         .toList();
-
-    return fields;
   }
 
-  /// Create a new field
-  Future<Field> createField({
+  /// Add a new field to database
+  ///
+  /// POST /api/workspace/{workspace_id}/database/{database_id}/fields
+  /// Returns the field ID of the newly created field
+  Future<String> addField({
     required String workspaceId,
     required String databaseId,
-    required String name,
-    required FieldType type,
-    Map<String, dynamic>? typeOptions,
+    required InsertDatabaseField field,
   }) async {
-    final data = <String, dynamic>{
-      'name': name,
-      'type': type.name,
-    };
-
-    if (typeOptions != null) {
-      data['type_options'] = typeOptions;
-    }
-
     final response = await _client.post(
       '/api/workspace/$workspaceId/database/$databaseId/fields',
-      data: data,
+      data: field.toJson(),
     );
 
-    return Field.fromJson(response);
+    // Response is either the field_id string or wrapped
+    if (response is String) {
+      return response;
+    }
+    return (response['data'] ?? response) as String;
   }
 
-  /// Update a field
-  Future<void> updateField({
+  /// List all row IDs in a database
+  ///
+  /// GET /api/workspace/{workspace_id}/database/{database_id}/row
+  /// Returns only the row IDs, use getRows() for full row data
+  Future<List<RowId>> listRowIds({
     required String workspaceId,
     required String databaseId,
-    required String fieldId,
-    String? name,
-    Map<String, dynamic>? typeOptions,
   }) async {
-    final data = <String, dynamic>{};
-    if (name != null) data['name'] = name;
-    if (typeOptions != null) data['type_options'] = typeOptions;
-
-    await _client.put(
-      '/api/workspace/$workspaceId/database/$databaseId/fields/$fieldId',
-      data: data,
+    final response = await _client.get(
+      '/api/workspace/$workspaceId/database/$databaseId/row',
     );
+
+    final data = response is List ? response : (response['data'] ?? response);
+    final list = data is List ? data : [];
+
+    return list
+        .map((json) => RowId.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
-  /// Delete a field
-  Future<void> deleteField({
-    required String workspaceId,
-    required String databaseId,
-    required String fieldId,
-  }) async {
-    await _client.delete(
-      '/api/workspace/$workspaceId/database/$databaseId/fields/$fieldId',
-    );
-  }
-
-  /// Get all rows in a database
+  /// Get full row details with cell data
+  ///
+  /// GET /api/workspace/{workspace_id}/database/{database_id}/row/detail?ids=...&with_doc=true
   Future<List<Row>> getRows({
     required String workspaceId,
     required String databaseId,
-    int? limit,
-    int? offset,
+    List<String>? rowIds,
+    bool withDoc = false,
   }) async {
-    final params = <String, dynamic>{};
-    if (limit != null) params['limit'] = limit;
-    if (offset != null) params['offset'] = offset;
+    // If no row IDs provided, get all row IDs first
+    final ids = rowIds ?? (await listRowIds(
+      workspaceId: workspaceId,
+      databaseId: databaseId,
+    )).map((r) => r.id).toList();
 
-    final response = await _client.get(
-      '/api/workspace/$workspaceId/database/$databaseId/row',
-      params: params,
-    );
+    if (ids.isEmpty) {
+      return [];
+    }
 
-    final rows = (response['rows'] as List)
-        .map((json) => Row.fromJson(json as Map<String, dynamic>))
-        .toList();
-
-    return rows;
-  }
-
-  /// Get a specific row
-  Future<Row> getRow({
-    required String workspaceId,
-    required String databaseId,
-    required String rowId,
-  }) async {
     final response = await _client.get(
       '/api/workspace/$workspaceId/database/$databaseId/row/detail',
-      params: {'row_id': rowId},
+      params: {
+        'ids': ids.join(','),
+        'with_doc': withDoc.toString(),
+      },
     );
 
-    return Row.fromJson(response);
+    final data = response is List ? response : (response['data'] ?? response);
+    final list = data is List ? data : [];
+
+    return list
+        .map((json) => Row.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
-  /// Create a new row
-  Future<Row> createRow({
+  /// Create a new row in the database
+  ///
+  /// POST /api/workspace/{workspace_id}/database/{database_id}/row
+  ///
+  /// Example cellData:
+  /// ```dart
+  /// {
+  ///   "Name": "John Doe",        // using field name
+  ///   "_field_123": "some value"  // using field ID
+  /// }
+  /// ```
+  ///
+  /// Returns the row ID of the newly created row
+  Future<String> createRow({
     required String workspaceId,
     required String databaseId,
     required Map<String, dynamic> cellData,
+    String? documentContent,
   }) async {
     final response = await _client.post(
       '/api/workspace/$workspaceId/database/$databaseId/row',
       data: {
         'cells': cellData,
+        if (documentContent != null) 'document': documentContent,
       },
     );
 
-    return Row.fromJson(response);
+    // Response is the row_id
+    if (response is String) {
+      return response;
+    }
+    return (response['data'] ?? response) as String;
   }
 
-  /// Update a row
-  Future<Row> updateRow({
+  /// Update or create a row with idempotency
+  ///
+  /// PUT /api/workspace/{workspace_id}/database/{database_id}/row
+  ///
+  /// Uses pre_hash for idempotency - same pre_hash will update the same row
+  /// Returns the row ID
+  Future<String> upsertRow({
     required String workspaceId,
     required String databaseId,
-    required String rowId,
+    required String preHash,
     required Map<String, dynamic> cellData,
+    String? documentContent,
   }) async {
     final response = await _client.put(
       '/api/workspace/$workspaceId/database/$databaseId/row',
       data: {
-        'row_id': rowId,
+        'pre_hash': preHash,
         'cells': cellData,
+        if (documentContent != null) 'document': documentContent,
       },
     );
 
-    return Row.fromJson(response);
+    if (response is String) {
+      return response;
+    }
+    return (response['data'] ?? response) as String;
   }
 
-  /// Delete a row
-  Future<void> deleteRow({
+  /// Get rows updated after a specific timestamp (incremental sync)
+  ///
+  /// GET /api/workspace/{workspace_id}/database/{database_id}/row/updated?after={timestamp}
+  ///
+  /// This is useful for syncing changes incrementally without fetching all rows
+  Future<List<RowUpdatedItem>> getUpdatedRows({
     required String workspaceId,
     required String databaseId,
-    required String rowId,
+    DateTime? after,
   }) async {
-    await _client.delete(
-      '/api/workspace/$workspaceId/database/$databaseId/row/$rowId',
-    );
-  }
+    final params = <String, String>{};
+    if (after != null) {
+      params['after'] = after.toUtc().toIso8601String();
+    }
 
-  /// Batch create multiple rows
-  Future<List<Row>> batchCreateRows({
-    required String workspaceId,
-    required String databaseId,
-    required List<Map<String, dynamic>> rowsData,
-  }) async {
-    final response = await _client.post(
-      '/api/workspace/$workspaceId/database/$databaseId/rows/batch',
-      data: {
-        'rows': rowsData,
-      },
+    final response = await _client.get(
+      '/api/workspace/$workspaceId/database/$databaseId/row/updated',
+      params: params,
     );
 
-    final rows = (response['rows'] as List)
-        .map((json) => Row.fromJson(json as Map<String, dynamic>))
+    final data = response is List ? response : (response['data'] ?? response);
+    final list = data is List ? data : [];
+
+    return list
+        .map((json) => RowUpdatedItem.fromJson(json as Map<String, dynamic>))
         .toList();
-
-    return rows;
   }
+
+  // Note: Delete operations are not exposed in the current AppFlowy Cloud API
+  // Rows are typically archived or moved to trash rather than deleted
 }
