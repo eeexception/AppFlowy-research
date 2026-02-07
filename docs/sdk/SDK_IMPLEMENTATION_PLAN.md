@@ -52,13 +52,26 @@ dev_dependencies:
 
 ### 2.2 Python SDK (Future)
 
+**Python Version:** 3.12.8
+**Environment Manager:** pipenv or venv
+
 **Core Dependencies:**
-```python
-# requirements.txt
-httpx>=0.27.0        # Async HTTP client
-pydantic>=2.5.0      # Data validation and serialization
-python-dotenv>=1.0.0 # Environment configuration
-pytest>=8.0.0        # Testing
+```toml
+# Pipfile (for pipenv)
+[packages]
+httpx = ">=0.27.0"        # Async HTTP client
+pydantic = ">=2.5.0"      # Data validation and serialization
+python-dotenv = ">=1.0.0" # Environment configuration
+
+[dev-packages]
+pytest = ">=8.0.0"        # Testing
+pytest-asyncio = ">=0.23.0"
+black = ">=24.0.0"        # Code formatting
+mypy = ">=1.8.0"          # Type checking
+ruff = ">=0.1.0"          # Linting
+
+[requires]
+python_version = "3.12.8"
 ```
 
 ## 3. SDK Architecture
@@ -757,11 +770,217 @@ print(content);
 - ✅ Architecture Documentation
 - ✅ Contribution Guide
 
-### 15.3 CI/CD Setup
-- ✅ Automated testing pipeline
-- ✅ Code coverage reporting
-- ✅ Linting and formatting checks
-- ✅ Release automation
+### 15.3 CI/CD Setup (Draft)
+
+**Note:** This is a draft configuration. Not tested or verified.
+
+**GitHub Actions Workflows:**
+
+#### Workflow 1: CI Pipeline (`.github/workflows/ci.yml`)
+
+```yaml
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  flutter-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        flutter-version: ['3.16.0', '3.24.0']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ matrix.flutter-version }}
+          channel: 'stable'
+
+      - name: Install dependencies
+        working-directory: sdk/appflowy_sdk
+        run: flutter pub get
+
+      - name: Analyze code
+        working-directory: sdk/appflowy_sdk
+        run: flutter analyze
+
+      - name: Check formatting
+        working-directory: sdk/appflowy_sdk
+        run: dart format --set-exit-if-changed .
+
+      - name: Run unit tests
+        working-directory: sdk/appflowy_sdk
+        run: flutter test --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: sdk/appflowy_sdk/coverage/lcov.info
+          flags: flutter
+
+  python-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.12.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.8'
+
+      - name: Install pipenv
+        run: pip install pipenv
+
+      - name: Install dependencies
+        working-directory: sdk/appflowy_sdk_python
+        run: pipenv install --dev
+
+      - name: Lint with ruff
+        working-directory: sdk/appflowy_sdk_python
+        run: pipenv run ruff check .
+
+      - name: Type check with mypy
+        working-directory: sdk/appflowy_sdk_python
+        run: pipenv run mypy appflowy_sdk
+
+      - name: Format check with black
+        working-directory: sdk/appflowy_sdk_python
+        run: pipenv run black --check .
+
+      - name: Run unit tests
+        working-directory: sdk/appflowy_sdk_python
+        run: pipenv run pytest --cov=appflowy_sdk --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: sdk/appflowy_sdk_python/coverage.xml
+          flags: python
+```
+
+#### Workflow 2: Release Pipeline (`.github/workflows/release.yml`)
+
+```yaml
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-and-publish-flutter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+
+      - name: Install dependencies
+        working-directory: sdk/appflowy_sdk
+        run: flutter pub get
+
+      - name: Run tests
+        working-directory: sdk/appflowy_sdk
+        run: flutter test
+
+      - name: Publish to pub.dev
+        working-directory: sdk/appflowy_sdk
+        run: flutter pub publish --force
+        env:
+          PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-and-publish-python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.12.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.8'
+
+      - name: Install pipenv and build tools
+        run: pip install pipenv build twine
+
+      - name: Install dependencies
+        working-directory: sdk/appflowy_sdk_python
+        run: pipenv install --dev
+
+      - name: Run tests
+        working-directory: sdk/appflowy_sdk_python
+        run: pipenv run pytest
+
+      - name: Build package
+        working-directory: sdk/appflowy_sdk_python
+        run: python -m build
+
+      - name: Publish to PyPI
+        working-directory: sdk/appflowy_sdk_python
+        run: twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+```
+
+**Pre-commit Hooks (`.pre-commit-config.yaml`):**
+
+```yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: local
+    hooks:
+      - id: flutter-analyze
+        name: Flutter Analyze
+        entry: bash -c 'cd sdk/appflowy_sdk && flutter analyze'
+        language: system
+        pass_filenames: false
+
+      - id: flutter-test
+        name: Flutter Test
+        entry: bash -c 'cd sdk/appflowy_sdk && flutter test'
+        language: system
+        pass_filenames: false
+
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+        args: [--config=sdk/appflowy_sdk_python/pyproject.toml]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.14
+    hooks:
+      - id: ruff
+        args: [--fix, --config=sdk/appflowy_sdk_python/pyproject.toml]
+```
 
 ## 16. Success Criteria
 

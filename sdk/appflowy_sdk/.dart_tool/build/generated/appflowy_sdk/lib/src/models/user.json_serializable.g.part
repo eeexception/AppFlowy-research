@@ -1,0 +1,51 @@
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_$UserProfileImpl _$$UserProfileImplFromJson(Map<String, dynamic> json) =>
+    _$UserProfileImpl(
+      id: json['id'] as String,
+      email: json['email'] as String,
+      name: json['name'] as String,
+      avatarUrl: json['avatar_url'] as String?,
+      createdAt: DateTime.parse(json['created_at'] as String),
+    );
+
+Map<String, dynamic> _$$UserProfileImplToJson(_$UserProfileImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'email': instance.email,
+      'name': instance.name,
+      'avatar_url': instance.avatarUrl,
+      'created_at': instance.createdAt.toIso8601String(),
+    };
+
+_$AuthResponseImpl _$$AuthResponseImplFromJson(Map<String, dynamic> json) =>
+    _$AuthResponseImpl(
+      user: UserProfile.fromJson(json['user'] as Map<String, dynamic>),
+      accessToken: json['access_token'] as String,
+      refreshToken: json['refresh_token'] as String,
+      expiresIn: (json['expires_in'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$$AuthResponseImplToJson(_$AuthResponseImpl instance) =>
+    <String, dynamic>{
+      'user': instance.user,
+      'access_token': instance.accessToken,
+      'refresh_token': instance.refreshToken,
+      'expires_in': instance.expiresIn,
+    };
+
+_$TokenResponseImpl _$$TokenResponseImplFromJson(Map<String, dynamic> json) =>
+    _$TokenResponseImpl(
+      accessToken: json['access_token'] as String,
+      refreshToken: json['refresh_token'] as String,
+      expiresIn: (json['expires_in'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$$TokenResponseImplToJson(_$TokenResponseImpl instance) =>
+    <String, dynamic>{
+      'access_token': instance.accessToken,
+      'refresh_token': instance.refreshToken,
+      'expires_in': instance.expiresIn,
+    };

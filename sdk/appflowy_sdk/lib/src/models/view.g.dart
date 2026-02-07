@@ -1,0 +1,36 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'view.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_$ViewImpl _$$ViewImplFromJson(Map<String, dynamic> json) => _$ViewImpl(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      layout: $enumDecode(_$ViewLayoutEnumMap, json['layout']),
+      workspaceId: json['workspace_id'] as String,
+      parentViewId: json['parent_view_id'] as String?,
+      createdAt: json['created_at'] == null
+          ? null
+          : DateTime.parse(json['created_at'] as String),
+    );
+
+Map<String, dynamic> _$$ViewImplToJson(_$ViewImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'layout': _$ViewLayoutEnumMap[instance.layout]!,
+      'workspace_id': instance.workspaceId,
+      'parent_view_id': instance.parentViewId,
+      'created_at': instance.createdAt?.toIso8601String(),
+    };
+
+const _$ViewLayoutEnumMap = {
+  ViewLayout.document: 'document',
+  ViewLayout.grid: 'grid',
+  ViewLayout.board: 'board',
+  ViewLayout.calendar: 'calendar',
+  ViewLayout.chat: 'chat',
+};

@@ -1,0 +1,65 @@
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_$WorkspaceImpl _$$WorkspaceImplFromJson(Map<String, dynamic> json) =>
+    _$WorkspaceImpl(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      members: (json['members'] as List<dynamic>?)
+              ?.map((e) => WorkspaceMember.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+    );
+
+Map<String, dynamic> _$$WorkspaceImplToJson(_$WorkspaceImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'created_at': instance.createdAt.toIso8601String(),
+      'members': instance.members,
+    };
+
+_$WorkspaceMemberImpl _$$WorkspaceMemberImplFromJson(
+        Map<String, dynamic> json) =>
+    _$WorkspaceMemberImpl(
+      email: json['email'] as String,
+      name: json['name'] as String,
+      role: $enumDecode(_$RoleEnumMap, json['role']),
+      avatarUrl: json['avatar_url'] as String?,
+      joinedAt: (json['joined_at'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$$WorkspaceMemberImplToJson(
+        _$WorkspaceMemberImpl instance) =>
+    <String, dynamic>{
+      'email': instance.email,
+      'name': instance.name,
+      'role': _$RoleEnumMap[instance.role]!,
+      'avatar_url': instance.avatarUrl,
+      'joined_at': instance.joinedAt,
+    };
+
+const _$RoleEnumMap = {
+  Role.owner: 'owner',
+  Role.member: 'member',
+  Role.guest: 'guest',
+};
+
+_$WorkspaceUsageImpl _$$WorkspaceUsageImplFromJson(Map<String, dynamic> json) =>
+    _$WorkspaceUsageImpl(
+      totalBlobBytes: (json['total_blob_bytes'] as num).toInt(),
+      totalBlobBytesLimit: (json['total_blob_bytes_limit'] as num).toInt(),
+      memberCount: (json['member_count'] as num).toInt(),
+      memberCountLimit: (json['member_count_limit'] as num).toInt(),
+    );
+
+Map<String, dynamic> _$$WorkspaceUsageImplToJson(
+        _$WorkspaceUsageImpl instance) =>
+    <String, dynamic>{
+      'total_blob_bytes': instance.totalBlobBytes,
+      'total_blob_bytes_limit': instance.totalBlobBytesLimit,
+      'member_count': instance.memberCount,
+      'member_count_limit': instance.memberCountLimit,
+    };
